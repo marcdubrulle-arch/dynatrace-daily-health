@@ -30,6 +30,12 @@ jobs:
           DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
           DYNATRACE_PROBLEM_SELECTOR: ${{ vars.DYNATRACE_PROBLEM_SELECTOR }}
           DYNATRACE_AVAILABILITY_METRIC_SELECTOR: ${{ vars.DYNATRACE_AVAILABILITY_METRIC_SELECTOR }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
         run: |
           python run_daily.py
 
@@ -38,4 +44,3 @@ jobs:
         with:
           name: dynatrace-daily-health
           path: reports/
-

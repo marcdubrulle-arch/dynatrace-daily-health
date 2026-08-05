@@ -20,6 +20,15 @@ class DynatraceProblem:
     end_time: str | None
 
 
+@dataclass
+class SyntheticTest:
+    id: str
+    name: str
+    status: str
+    availability: float
+    last_run: str | None
+
+
 class DynatraceClient:
     def __init__(self, base_url: str, api_token: str) -> None:
         self.base_url = base_url.rstrip("/")
@@ -65,6 +74,25 @@ class DynatraceClient:
                     availability[key] = float(value)
         return availability
 
+    def fetch_synthetic_tests(self, start: datetime, end: datetime) -> list[SyntheticTest]:
+        """Fetch synthetic test results for the given time range."""
+        params = {
+            "from": start.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "to": end.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "pageSize": 200,
+        }
+        try:
+            data = self._get("/api/v2/synthetics/monitors", params=params)
+            tests = []
+            for item in data.get("monitors", []):
+                test = self._parse_synthetic_test(item, start, end)
+                if test:
+                    tests.append(test)
+            return tests
+        except Exception as e:
+            print(f"Warning: Failed to fetch synthetic tests: {e}")
+            return []
+
     @staticmethod
     def _parse_problem(item: dict[str, Any]) -> DynatraceProblem:
         return DynatraceProblem(
@@ -79,4 +107,16 @@ class DynatraceClient:
             end_time=item.get("endTime"),
         )
 
-
+    @staticmethod
+    def _parse_synthetic_test(item: dict[str, Any], start: datetime, end: datetime) -> SyntheticTest | None:
+        monitor_id = item.get("entityId")
+        if not monitor_id:
+            return None
+        
+        return SyntheticTest(
+            id=monitor_id,
+            name=str(item.get("displayName", "")),
+            status=str(item.get("enabled", True)) == "True" and "enabled" or "disabled",
+            availability=float(item.get("availability", 0) or 0),
+            last_run=item.get("lastRun"),
+        )

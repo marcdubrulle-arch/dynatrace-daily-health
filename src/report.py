@@ -17,24 +17,35 @@ def build_markdown(result: AnalysisResult, generated_at: datetime) -> str:
     ]
     for key, value in result.summary.items():
         lines.append(f"- {key}: {value}")
+    
     lines.extend(["", "## Open problems"])
     if result.open_problems:
         for item in result.open_problems:
             lines.append(f"- {item['display_id']} | {item['severity']} | {item['title']}")
     else:
         lines.append("- none")
+    
     lines.extend(["", "## Recurring problems"])
     if result.recurring_problems:
         for item in result.recurring_problems:
             lines.append(f"- {item['signature']} ({item['count']} occurrences)")
     else:
         lines.append("- none")
+    
     lines.extend(["", "## Availability"])
     if result.availability:
         for app, value in sorted(result.availability.items()):
             lines.append(f"- {app}: {value:.2f}")
     else:
         lines.append("- none")
+    
+    lines.extend(["", "## Synthetic Tests"])
+    if result.synthetic_tests:
+        for test in result.synthetic_tests:
+            lines.append(f"- {test['name']} | {test['status']} | Availability: {test['availability']:.2f}%")
+    else:
+        lines.append("- none")
+    
     lines.append("")
     return "\n".join(lines)
 
@@ -54,6 +65,7 @@ def write_outputs(result: AnalysisResult, output_dir: str, generated_at: datetim
                 "open_problems": result.open_problems,
                 "recurring_problems": result.recurring_problems,
                 "availability": result.availability,
+                "synthetic_tests": result.synthetic_tests,
             },
             indent=2,
             ensure_ascii=False,
@@ -61,5 +73,4 @@ def write_outputs(result: AnalysisResult, output_dir: str, generated_at: datetim
         encoding="utf-8",
     )
     return md_path, json_path
-
 

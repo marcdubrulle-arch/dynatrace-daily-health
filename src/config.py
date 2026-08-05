@@ -13,6 +13,14 @@ class Config:
             'builtin:service.availability:splitBy():sort(value(avg,descending))',
         )
         self.output_dir = os.environ.get("OUTPUT_DIR", "reports")
+        
+        # Email configuration
+        self.smtp_server = os.environ.get("SMTP_SERVER", "")
+        self.smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+        self.smtp_user = os.environ.get("SMTP_USER", "")
+        self.smtp_password = os.environ.get("SMTP_PASSWORD", "")
+        self.email_from = os.environ.get("EMAIL_FROM", "")
+        self.email_to = os.environ.get("EMAIL_TO", "").split(",") if os.environ.get("EMAIL_TO") else []
 
     def validate(self) -> None:
         if not self.base_url:

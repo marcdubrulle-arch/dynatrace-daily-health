@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import re
 from typing import Iterable
 
-from .dynatrace_client import DynatraceProblem
+from .dynatrace_client import DynatraceProblem, SyntheticTest
 
 
 @dataclass
@@ -14,6 +14,7 @@ class AnalysisResult:
     open_problems: list[dict]
     recurring_problems: list[dict]
     availability: dict[str, float]
+    synthetic_tests: list[dict]
     summary: dict[str, int]
 
 
@@ -24,9 +25,15 @@ def problem_signature(problem: DynatraceProblem) -> str:
     return title
 
 
-def analyze(problems_24h: Iterable[DynatraceProblem], problems_7d: Iterable[DynatraceProblem], availability: dict[str, float]) -> AnalysisResult:
+def analyze(
+    problems_24h: Iterable[DynatraceProblem],
+    problems_7d: Iterable[DynatraceProblem],
+    availability: dict[str, float],
+    synthetic_tests: list[SyntheticTest] | None = None,
+) -> AnalysisResult:
     p24 = list(problems_24h)
     p7 = list(problems_7d)
+    synthetic_tests = synthetic_tests or []
 
     open_problems = [asdict_problem(p) for p in p24 if p.status.upper() == "OPEN"]
     signatures = Counter(problem_signature(p) for p in p7)
@@ -37,16 +44,20 @@ def analyze(problems_24h: Iterable[DynatraceProblem], problems_7d: Iterable[Dyna
             recurring.append({"signature": signature, "count": count})
     recurring.sort(key=lambda item: item["count"], reverse=True)
 
+    synthetic_dicts = [asdict_synthetic(s) for s in synthetic_tests]
+
     summary = {
         "problems_last_24h": len(p24),
         "open_problems": len(open_problems),
         "recurring_signatures": len(recurring),
         "applications": len(availability),
+        "synthetic_tests": len(synthetic_dicts),
     }
     return AnalysisResult(
         open_problems=open_problems,
         recurring_problems=recurring[:10],
         availability=availability,
+        synthetic_tests=synthetic_dicts,
         summary=summary,
     )
 
@@ -64,4 +75,13 @@ def asdict_problem(problem: DynatraceProblem) -> dict:
         "end_time": problem.end_time,
     }
 
+
+def asdict_synthetic(test: SyntheticTest) -> dict:
+    return {
+        "id": test.id,
+        "name": test.name,
+        "status": test.status,
+        "availability": test.availability,
+        "last_run": test.last_run,
+    }
 
