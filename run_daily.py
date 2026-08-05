@@ -12,6 +12,12 @@ from src.report import write_outputs
 
 def main() -> None:
     config = Config()
+    
+    # Debug logging
+    print(f"DEBUG: DYNATRACE_BASE_URL = '{config.base_url}'")
+    print(f"DEBUG: DYNATRACE_API_TOKEN = '{'*' * len(config.api_token) if config.api_token else ''}'")
+    print(f"DEBUG: EMAIL_TO = '{config.email_to}'")
+    
     config.validate()
 
     client = DynatraceClient(config.base_url, config.api_token)
