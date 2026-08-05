@@ -1,0 +1,41 @@
+name: Daily Dynatrace Health
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate report
+        env:
+          DYNATRACE_BASE_URL: ${{ secrets.DYNATRACE_BASE_URL }}
+          DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+          DYNATRACE_PROBLEM_SELECTOR: ${{ vars.DYNATRACE_PROBLEM_SELECTOR }}
+          DYNATRACE_AVAILABILITY_METRIC_SELECTOR: ${{ vars.DYNATRACE_AVAILABILITY_METRIC_SELECTOR }}
+        run: |
+          python run_daily.py
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: dynatrace-daily-health
+          path: reports/
+
