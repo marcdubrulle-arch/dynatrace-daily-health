@@ -1,0 +1,7 @@
+Last workflow trigger: 2026-08-05 17:30 UTC
+Reason: Re-trigger after config.py bug fix (commit 107830e)
+
+The workflow should now use the fixed config.py that properly handles
+empty SMTP_PORT environment variables.
+
+Status: Awaiting workflow execution...
