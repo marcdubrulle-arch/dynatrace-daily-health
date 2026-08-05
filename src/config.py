@@ -15,12 +15,14 @@ class Config:
         self.output_dir = os.environ.get("OUTPUT_DIR", "reports")
         
         # Email configuration
-        self.smtp_server = os.environ.get("SMTP_SERVER", "")
-        self.smtp_port = int(os.environ.get("SMTP_PORT", "587"))
-        self.smtp_user = os.environ.get("SMTP_USER", "")
+        self.smtp_server = os.environ.get("SMTP_SERVER", "").strip()
+        smtp_port_str = os.environ.get("SMTP_PORT", "").strip()
+        self.smtp_port = int(smtp_port_str) if smtp_port_str else 587
+        self.smtp_user = os.environ.get("SMTP_USER", "").strip()
         self.smtp_password = os.environ.get("SMTP_PASSWORD", "")
-        self.email_from = os.environ.get("EMAIL_FROM", "")
-        self.email_to = os.environ.get("EMAIL_TO", "").split(",") if os.environ.get("EMAIL_TO") else []
+        self.email_from = os.environ.get("EMAIL_FROM", "").strip()
+        email_to_str = os.environ.get("EMAIL_TO", "").strip()
+        self.email_to = [e.strip() for e in email_to_str.split(",") if e.strip()]
 
     def validate(self) -> None:
         if not self.base_url:
