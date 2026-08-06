@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import os
+from urllib.parse import urlsplit
 
 
 class Config:
     def __init__(self) -> None:
-        self.base_url = os.environ.get("DYNATRACE_BASE_URL", "").rstrip("/")
+        self.base_url, self.base_url_was_normalized = _normalize_base_url(
+            os.environ.get("DYNATRACE_BASE_URL", "")
+        )
         self.api_token = os.environ.get("DYNATRACE_API_TOKEN", "")
         self.problem_selector = os.environ.get("DYNATRACE_PROBLEM_SELECTOR", "")
         self.availability_metric_selector = os.environ.get(
@@ -31,3 +34,21 @@ class Config:
             raise ValueError("DYNATRACE_API_TOKEN is required")
 
 
+def _normalize_base_url(raw_value: str) -> tuple[str, bool]:
+    raw = raw_value.strip()
+    if not raw:
+        return "", False
+
+    candidate = raw if "://" in raw else f"https://{raw}"
+    parsed = urlsplit(candidate)
+
+    # urlsplit("host-only") places value into path, so handle both netloc and path.
+    host = (parsed.netloc or parsed.path).strip().lower()
+    if not host:
+        return "", False
+
+    if host.endswith(".apps.dynatrace.com"):
+        host = host[: -len(".apps.dynatrace.com")] + ".live.dynatrace.com"
+
+    normalized = f"{parsed.scheme or 'https'}://{host}".rstrip("/")
+    return normalized, normalized != raw.rstrip("/")

@@ -16,6 +16,8 @@ def main() -> None:
         
         # Debug logging
         print(f"DEBUG: DYNATRACE_BASE_URL = '{config.base_url}'")
+        if getattr(config, "base_url_was_normalized", False):
+            print("DEBUG: DYNATRACE_BASE_URL was normalized to API endpoint format")
         print(f"DEBUG: DYNATRACE_API_TOKEN length = {len(config.api_token) if config.api_token else 0}")
         print(f"DEBUG: DYNATRACE_API_TOKEN prefix = '{config.api_token[:20] if config.api_token else 'EMPTY'}'")
         print(f"DEBUG: EMAIL_TO = '{config.email_to}'")

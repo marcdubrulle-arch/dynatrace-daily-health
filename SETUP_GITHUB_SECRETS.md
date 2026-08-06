@@ -22,6 +22,7 @@ Le workflow échoue avec "Process exit code 1" car le secret `DYNATRACE_API_TOKE
    **Secret 1: DYNATRACE_BASE_URL**
    - Name: `DYNATRACE_BASE_URL`
    - Value: `https://uxw82338.live.dynatrace.com`
+   - Important: utilisez le domaine `*.live.dynatrace.com` (pas `*.apps.dynatrace.com`)
    - Click "Add secret"
 
    **Secret 2: DYNATRACE_API_TOKEN**

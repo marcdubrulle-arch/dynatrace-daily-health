@@ -55,8 +55,8 @@ class DynatraceClient:
 
     def fetch_problems(self, start: datetime, end: datetime, selector: str = "") -> list[DynatraceProblem]:
         params: dict[str, Any] = {
-            "from": start.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "to": end.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "from": _to_dt_api_time(start),
+            "to": _to_dt_api_time(end),
             "pageSize": 200,
         }
         if selector:
@@ -67,8 +67,8 @@ class DynatraceClient:
     def fetch_application_availability(self, metric_selector: str, start: datetime, end: datetime) -> dict[str, float]:
         params = {
             "metricSelector": metric_selector,
-            "from": start.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "to": end.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "from": _to_dt_api_time(start),
+            "to": _to_dt_api_time(end),
         }
         data = self._get("/api/v2/metrics/query", params=params)
         availability: dict[str, float] = {}
@@ -85,8 +85,8 @@ class DynatraceClient:
     def fetch_synthetic_tests(self, start: datetime, end: datetime) -> list[SyntheticTest]:
         """Fetch synthetic test results for the given time range."""
         params = {
-            "from": start.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "to": end.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "from": _to_dt_api_time(start),
+            "to": _to_dt_api_time(end),
             "pageSize": 200,
         }
         try:
@@ -128,3 +128,9 @@ class DynatraceClient:
             availability=float(item.get("availability", 0) or 0),
             last_run=item.get("lastRun"),
         )
+
+
+def _to_dt_api_time(dt: datetime) -> str:
+    # Dynatrace API accepts RFC3339; using second precision avoids tenant-specific
+    # parsing issues with microseconds.
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
