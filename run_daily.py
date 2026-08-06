@@ -1,13 +1,27 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
+import hashlib
 
 from src.analyzer import analyze
 from src.config import Config
 from src.dynatrace_client import DynatraceClient
 from src.email_sender import EmailSender, build_email_html
 from src.report import write_outputs
+
+
+def _mask_secret(value: str) -> str:
+    if not value:
+        return "EMPTY"
+    if len(value) <= 8:
+        return "*" * len(value)
+    return f"{value[:6]}...{value[-4:]}"
+
+
+def _secret_fingerprint(value: str) -> str:
+    if not value:
+        return "EMPTY"
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
 
 
 def main() -> None:
@@ -19,7 +33,8 @@ def main() -> None:
         if getattr(config, "base_url_was_normalized", False):
             print("DEBUG: DYNATRACE_BASE_URL was normalized to API endpoint format")
         print(f"DEBUG: DYNATRACE_API_TOKEN length = {len(config.api_token) if config.api_token else 0}")
-        print(f"DEBUG: DYNATRACE_API_TOKEN prefix = '{config.api_token[:20] if config.api_token else 'EMPTY'}'")
+        print(f"DEBUG: DYNATRACE_API_TOKEN masked = '{_mask_secret(config.api_token)}'")
+        print(f"DEBUG: DYNATRACE_API_TOKEN fingerprint = '{_secret_fingerprint(config.api_token)}'")
         print(f"DEBUG: EMAIL_TO = '{config.email_to}'")
         
         config.validate()
