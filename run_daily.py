@@ -11,14 +11,23 @@ from src.report import write_outputs
 
 
 def main() -> None:
-    config = Config()
-    
-    # Debug logging
-    print(f"DEBUG: DYNATRACE_BASE_URL = '{config.base_url}'")
-    print(f"DEBUG: DYNATRACE_API_TOKEN = '{'*' * len(config.api_token) if config.api_token else ''}'")
-    print(f"DEBUG: EMAIL_TO = '{config.email_to}'")
-    
-    config.validate()
+    try:
+        config = Config()
+        
+        # Debug logging
+        print(f"DEBUG: DYNATRACE_BASE_URL = '{config.base_url}'")
+        print(f"DEBUG: DYNATRACE_API_TOKEN length = {len(config.api_token) if config.api_token else 0}")
+        print(f"DEBUG: DYNATRACE_API_TOKEN prefix = '{config.api_token[:20] if config.api_token else 'EMPTY'}'")
+        print(f"DEBUG: EMAIL_TO = '{config.email_to}'")
+        
+        config.validate()
+        print("DEBUG: Config validation passed")
+    except ValueError as e:
+        print(f"CONFIG ERROR: {e}")
+        raise
+    except Exception as e:
+        print(f"UNEXPECTED ERROR during config: {e}")
+        raise
 
     client = DynatraceClient(config.base_url, config.api_token)
     now = datetime.now(timezone.utc)

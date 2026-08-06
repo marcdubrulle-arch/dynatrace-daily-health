@@ -41,9 +41,17 @@ class DynatraceClient:
         )
 
     def _get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        response = self.session.get(f"{self.base_url}{path}", params=params, timeout=60)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = self.session.get(f"{self.base_url}{path}", params=params, timeout=60)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP ERROR: {e.response.status_code} on {path}")
+            print(f"Response text: {e.response.text[:500]}")
+            raise
+        except Exception as e:
+            print(f"API ERROR: {e}")
+            raise
 
     def fetch_problems(self, start: datetime, end: datetime, selector: str = "") -> list[DynatraceProblem]:
         params: dict[str, Any] = {
