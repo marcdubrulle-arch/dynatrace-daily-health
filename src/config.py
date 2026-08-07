@@ -13,7 +13,7 @@ class Config:
         self.problem_selector = os.environ.get("DYNATRACE_PROBLEM_SELECTOR", "").strip()
         self.availability_metric_selector = _get_env_or_default(
             "DYNATRACE_AVAILABILITY_METRIC_SELECTOR",
-            "builtin:service.availability:splitBy():sort(value(avg,descending))",
+            "(builtin:synthetic.browser.availability:splitBy(dt.entity.synthetic_test):avg:sort(value(avg,descending)):limit(20)):limit(100):names",
         )
         self.output_dir = os.environ.get("OUTPUT_DIR", "reports")
         

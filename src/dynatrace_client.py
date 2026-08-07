@@ -87,7 +87,15 @@ class DynatraceClient:
             "from": _to_dt_api_time(start),
             "to": _to_dt_api_time(end),
         }
-        data = self._get("/api/v2/metrics/query", params=params)
+        try:
+            data = self._get("/api/v2/metrics/query", params=params)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code in (400, 404):
+                print(
+                    "Warning: availability metrics query failed; continuing without availability data"
+                )
+                return {}
+            raise
         availability: dict[str, float] = {}
         for result in data.get("result", []):
             for series in result.get("data", []):
