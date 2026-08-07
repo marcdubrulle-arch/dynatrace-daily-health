@@ -65,12 +65,22 @@ def main() -> None:
     synthetic_tests = client.fetch_synthetic_tests(last_24h_start, now)
 
     result = analyze(problems_24h, problems_7d, availability, synthetic_tests)
-    md_path, json_path = write_outputs(result, config.output_dir, now)
+    md_path, json_path, html_path = write_outputs(result, config.output_dir, now)
     print(f"wrote {md_path}")
     print(f"wrote {json_path}")
+    print(f"wrote {html_path}")
 
-    # Send email report if configured
-    if config.email_to:
+    # Send email report if fully configured
+    email_ready = all(
+        [
+            config.email_to,
+            config.smtp_server,
+            config.smtp_user,
+            config.smtp_password,
+            config.email_from,
+        ]
+    )
+    if email_ready:
         email_sender = EmailSender(
             config.smtp_server,
             config.smtp_port,
@@ -92,7 +102,7 @@ def main() -> None:
             md_path,
         )
     else:
-        print("INFO: EMAIL_TO not configured; skipping email send")
+        print("INFO: Email not fully configured; HTML report remains the primary output artifact")
 
 
 if __name__ == "__main__":

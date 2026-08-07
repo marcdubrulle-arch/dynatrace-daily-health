@@ -33,20 +33,6 @@ class Config:
             raise ValueError("DYNATRACE_BASE_URL is required")
         if not self.api_token:
             raise ValueError("DYNATRACE_API_TOKEN is required")
-        if self.email_to:
-            missing: list[str] = []
-            if not self.smtp_server:
-                missing.append("SMTP_SERVER")
-            if not self.smtp_user:
-                missing.append("SMTP_USER")
-            if not self.smtp_password:
-                missing.append("SMTP_PASSWORD")
-            if not self.email_from:
-                missing.append("EMAIL_FROM")
-            if missing:
-                raise ValueError(
-                    f"Email is enabled via EMAIL_TO but missing required settings: {', '.join(missing)}"
-                )
 
 
 def _normalize_base_url(raw_value: str) -> tuple[str, bool]:

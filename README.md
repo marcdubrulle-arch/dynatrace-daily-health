@@ -38,7 +38,8 @@ python run_daily.py
 
 - `reports/report_YYYY-MM-DD.md` - Markdown report
 - `reports/report_YYYY-MM-DD.json` - JSON report
-- Email sent to configured recipients (if email config provided)
+- `reports/report_YYYY-MM-DD.html` - HTML report (primary output)
+- Email sent to configured recipients (if full SMTP config is provided)
 
 ## Creating a Dynatrace API Token
 
