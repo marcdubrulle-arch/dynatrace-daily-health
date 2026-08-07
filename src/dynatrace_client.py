@@ -6,6 +6,11 @@ from typing import Any
 
 import requests
 
+FALLBACK_AVAILABILITY_METRIC_SELECTOR = (
+    "(builtin:synthetic.browser.availability:splitBy(dt.entity.synthetic_test):avg:"
+    "sort(value(avg,descending)):limit(20)):limit(100):names"
+)
+
 
 @dataclass
 class DynatraceProblem:
@@ -82,20 +87,32 @@ class DynatraceClient:
         return [self._parse_problem(item) for item in data.get("problems", [])]
 
     def fetch_application_availability(self, metric_selector: str, start: datetime, end: datetime) -> dict[str, float]:
-        params = {
-            "metricSelector": metric_selector,
-            "from": _to_dt_api_time(start),
-            "to": _to_dt_api_time(end),
-        }
-        try:
-            data = self._get("/api/v2/metrics/query", params=params)
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code in (400, 404):
-                print(
-                    "Warning: availability metrics query failed; continuing without availability data"
-                )
-                return {}
-            raise
+        selectors = [metric_selector]
+        if metric_selector != FALLBACK_AVAILABILITY_METRIC_SELECTOR:
+            selectors.append(FALLBACK_AVAILABILITY_METRIC_SELECTOR)
+
+        data: dict[str, Any] | None = None
+        for selector in selectors:
+            params = {
+                "metricSelector": selector,
+                "from": _to_dt_api_time(start),
+                "to": _to_dt_api_time(end),
+            }
+            try:
+                data = self._get("/api/v2/metrics/query", params=params)
+                if selector != metric_selector:
+                    print("Using fallback availability metric selector")
+                break
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code in (400, 404):
+                    print(f"Availability selector rejected: {selector}")
+                    continue
+                raise
+
+        if data is None:
+            print("Warning: availability metrics unavailable; continuing without availability data")
+            return {}
+
         availability: dict[str, float] = {}
         for result in data.get("result", []):
             for series in result.get("data", []):
