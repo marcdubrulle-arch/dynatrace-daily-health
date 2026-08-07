@@ -36,6 +36,10 @@ def main() -> None:
         print(f"DEBUG: DYNATRACE_API_TOKEN masked = '{_mask_secret(config.api_token)}'")
         print(f"DEBUG: DYNATRACE_API_TOKEN fingerprint = '{_secret_fingerprint(config.api_token)}'")
         print(f"DEBUG: EMAIL_TO = '{config.email_to}'")
+        print(f"DEBUG: SMTP_SERVER set = {bool(config.smtp_server)}")
+        print(f"DEBUG: SMTP_USER set = {bool(config.smtp_user)}")
+        print(f"DEBUG: SMTP_PASSWORD set = {bool(config.smtp_password)}")
+        print(f"DEBUG: EMAIL_FROM = '{config.email_from or 'EMPTY'}'")
         
         config.validate()
         print("DEBUG: Config validation passed")
@@ -66,7 +70,7 @@ def main() -> None:
     print(f"wrote {json_path}")
 
     # Send email report if configured
-    if config.email_to and config.smtp_server:
+    if config.email_to:
         email_sender = EmailSender(
             config.smtp_server,
             config.smtp_port,
@@ -87,6 +91,8 @@ def main() -> None:
             email_html,
             md_path,
         )
+    else:
+        print("INFO: EMAIL_TO not configured; skipping email send")
 
 
 if __name__ == "__main__":

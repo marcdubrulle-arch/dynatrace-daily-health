@@ -23,7 +23,8 @@ class Config:
         self.smtp_port = int(smtp_port_str) if smtp_port_str else 587
         self.smtp_user = os.environ.get("SMTP_USER", "").strip()
         self.smtp_password = os.environ.get("SMTP_PASSWORD", "")
-        self.email_from = os.environ.get("EMAIL_FROM", "").strip()
+        email_from_str = os.environ.get("EMAIL_FROM", "").strip()
+        self.email_from = email_from_str or self.smtp_user
         email_to_str = os.environ.get("EMAIL_TO", "").strip()
         self.email_to = [e.strip() for e in email_to_str.split(",") if e.strip()]
 
@@ -32,6 +33,20 @@ class Config:
             raise ValueError("DYNATRACE_BASE_URL is required")
         if not self.api_token:
             raise ValueError("DYNATRACE_API_TOKEN is required")
+        if self.email_to:
+            missing: list[str] = []
+            if not self.smtp_server:
+                missing.append("SMTP_SERVER")
+            if not self.smtp_user:
+                missing.append("SMTP_USER")
+            if not self.smtp_password:
+                missing.append("SMTP_PASSWORD")
+            if not self.email_from:
+                missing.append("EMAIL_FROM")
+            if missing:
+                raise ValueError(
+                    f"Email is enabled via EMAIL_TO but missing required settings: {', '.join(missing)}"
+                )
 
 
 def _normalize_base_url(raw_value: str) -> tuple[str, bool]:

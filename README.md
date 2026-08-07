@@ -23,8 +23,10 @@ Daily Dynatrace health report:
 - `SMTP_PORT` - SMTP port (default: 587)
 - `SMTP_USER` - SMTP username
 - `SMTP_PASSWORD` - SMTP password
-- `EMAIL_FROM` - Sender email address
+- `EMAIL_FROM` - Sender email address (defaults to `SMTP_USER` if omitted)
 - `EMAIL_TO` - Recipient email addresses (comma-separated)
+
+If `EMAIL_TO` is set, SMTP settings (`SMTP_SERVER`, `SMTP_USER`, `SMTP_PASSWORD`) must also be set.
 
 ## Run
 
