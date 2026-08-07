@@ -9,11 +9,11 @@ class Config:
         self.base_url, self.base_url_was_normalized = _normalize_base_url(
             os.environ.get("DYNATRACE_BASE_URL", "")
         )
-        self.api_token = os.environ.get("DYNATRACE_API_TOKEN", "")
-        self.problem_selector = os.environ.get("DYNATRACE_PROBLEM_SELECTOR", "")
-        self.availability_metric_selector = os.environ.get(
+        self.api_token = os.environ.get("DYNATRACE_API_TOKEN", "").strip()
+        self.problem_selector = os.environ.get("DYNATRACE_PROBLEM_SELECTOR", "").strip()
+        self.availability_metric_selector = _get_env_or_default(
             "DYNATRACE_AVAILABILITY_METRIC_SELECTOR",
-            'builtin:service.availability:splitBy():sort(value(avg,descending))',
+            "builtin:service.availability:splitBy():sort(value(avg,descending))",
         )
         self.output_dir = os.environ.get("OUTPUT_DIR", "reports")
         
@@ -52,3 +52,11 @@ def _normalize_base_url(raw_value: str) -> tuple[str, bool]:
 
     normalized = f"{parsed.scheme or 'https'}://{host}".rstrip("/")
     return normalized, normalized != raw.rstrip("/")
+
+
+def _get_env_or_default(name: str, default: str) -> str:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    stripped = value.strip()
+    return stripped if stripped else default
