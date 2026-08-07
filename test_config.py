@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Diagnostic script to test Dynatrace API token and configuration
-"""
+"""Diagnostic script to test Dynatrace API token and configuration"""
 import os
 import sys
 
