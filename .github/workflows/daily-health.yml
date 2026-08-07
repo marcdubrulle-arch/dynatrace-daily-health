@@ -50,6 +50,20 @@ jobs:
           echo "Validated DYNATRACE_BASE_URL host: ${DYNATRACE_BASE_URL#*://}"
           echo "Validated DYNATRACE_API_TOKEN length: ${#DYNATRACE_API_TOKEN}"
 
+          # Simple connectivity/auth check before running the full report.
+          CHECK_URL="${DYNATRACE_BASE_URL%/}/api/v2/problems?pageSize=1"
+          HTTP_CODE=$(curl -sS -o /tmp/dynatrace_check.json -w "%{http_code}" \
+            -H "Accept: application/json" \
+            -H "Authorization: Api-Token ${DYNATRACE_API_TOKEN}" \
+            "${CHECK_URL}")
+          if [ "${HTTP_CODE}" -lt 200 ] || [ "${HTTP_CODE}" -ge 300 ]; then
+            echo "::error::Dynatrace access check failed (HTTP ${HTTP_CODE}) on /api/v2/problems?pageSize=1"
+            echo "Response preview:"
+            head -c 500 /tmp/dynatrace_check.json || true
+            exit 1
+          fi
+          echo "Dynatrace access check passed (HTTP ${HTTP_CODE})"
+
       - name: Generate report
         env:
           DYNATRACE_BASE_URL: ${{ secrets.DYNATRACE_BASE_URL }}
