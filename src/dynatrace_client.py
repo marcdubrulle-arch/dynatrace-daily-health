@@ -46,8 +46,11 @@ class DynatraceClient:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
-            print(f"HTTP ERROR: {e.response.status_code} on {path}")
-            print(f"Response text: {e.response.text[:500]}")
+            status_code = e.response.status_code if e.response is not None else "unknown"
+            print(f"HTTP ERROR: {status_code} on {path}")
+            if e.response is not None and e.response.request is not None:
+                print(f"Request URL: {e.response.request.url}")
+                print(f"Response text: {e.response.text[:500]}")
             raise
         except Exception as e:
             print(f"API ERROR: {e}")
@@ -61,7 +64,21 @@ class DynatraceClient:
         }
         if selector:
             params["problemSelector"] = selector
-        data = self._get("/api/v2/problems", params=params)
+        try:
+            data = self._get("/api/v2/problems", params=params)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 400:
+                fallback_params: dict[str, Any] = {
+                    "from": int(start.timestamp() * 1000),
+                    "to": int(end.timestamp() * 1000),
+                    "pageSize": 200,
+                }
+                if selector:
+                    fallback_params["problemSelector"] = selector
+                print("Retrying /api/v2/problems with epoch millisecond timestamps")
+                data = self._get("/api/v2/problems", params=fallback_params)
+            else:
+                raise
         return [self._parse_problem(item) for item in data.get("problems", [])]
 
     def fetch_application_availability(self, metric_selector: str, start: datetime, end: datetime) -> dict[str, float]:
